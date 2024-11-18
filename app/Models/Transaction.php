@@ -41,7 +41,7 @@ class Transaction extends Model
                 'supplier_id' => 'required|exists:suppliers,id',
                 'quantity' => 'required|numeric',
                 'transaction_date' => 'required|date',
-                'transaction_type' => 'required|string|max:255',
+                'transaction_type' => 'required|string|in:in,out'
             ];
         } elseif ($process == 'update') {
             return [
@@ -49,7 +49,7 @@ class Transaction extends Model
                 'supplier_id' => 'required|exists:suppliers,id',
                 'quantity' => 'required|numeric',
                 'transaction_date' => 'required|date',
-                'transaction_type' => 'required|string|max:255',
+                'transaction_type' => 'required|string|in:in,out'
             ];
         }
     }

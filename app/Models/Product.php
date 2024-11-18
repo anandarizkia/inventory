@@ -27,6 +27,23 @@ class Product extends Model
     {
         return $this->hasMany(Transaction::class);
     }
+
+    /**
+     * Update stock quantity based on the transaction type and quantity.
+     *
+     * @param int $quantity
+     * @param string $transactionType
+     * @return void
+     */
+    public function updateStock(int $quantity, string $transactionType)
+    {
+        if ($transactionType === 'in') {
+            $this->stock_quantity += $quantity;
+        } elseif ($transactionType === 'out') {
+            $this->stock_quantity -= $quantity;
+        }
+        $this->save();
+    }
     /**
      * Aturan validasi untuk model ini.
      *
