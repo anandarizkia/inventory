@@ -33,21 +33,18 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), Transaction::rules('insert'));
-        Transaction::customValidation($validator);
+        $validator = Validator::make($request->all(), Product::rules('insert'));
+        Product::customValidation($validator);
 
         if ($validator->fails()) {
             return response()->json(['message' => $validator->messages()], 400);
         }
 
         try {
-            $transaction = Transaction::create($request->all());
-            $product = Product::find($transaction->product_id);
+            // Buat produk baru
+            $product = Product::create($request->all());
 
-            // Update stok menggunakan metode baru
-            $product->updateStock($transaction->quantity, $transaction->transaction_type);
-
-            return response()->json(['message' => 'Data berhasil disimpan', 'data' => $transaction], 200);
+            return response()->json(['message' => 'Produk berhasil dibuat', 'data' => $product], 201);
         } catch (\Throwable $e) {
             return response()->json(['message' => $e->getMessage()], 500);
         }
@@ -86,48 +83,29 @@ class ProductController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $validator = Validator::make($request->all(), Transaction::rules('update'));
-        Transaction::customValidation($validator);
+        $validator = Validator::make($request->all(), Product::rules('update'));
+        Product::customValidation($validator);
 
         if ($validator->fails()) {
             return response()->json(['message' => $validator->messages()], 400);
         }
 
         try {
-            $transaction = Transaction::find($id);
-            if (!$transaction) {
-                return response()->json(['message' => 'Transaksi tidak ditemukan.'], 404);
+            $product = Product::find($id);
+            if (!$product) {
+                return response()->json(['message' => 'Produk tidak ditemukan.'], 404);
             }
 
-            $previousQuantity = $transaction->quantity;
-            $previousTransactionType = $transaction->transaction_type;
-
-            $transaction->update($request->all());
-            $product = Product::find($transaction->product_id);
-
-            if ($transaction->transaction_type === 'in') {
-
-                if ($previousTransactionType === 'out') {
-                    $product->updateStock($previousQuantity, 'in');
-                }
-
-                $product->updateStock($transaction->quantity, 'in');
-            } elseif ($transaction->transaction_type === 'out') {
-
-                if ($previousTransactionType === 'in') {
-                    $product->updateStock($previousQuantity, 'out');
-                }
-
-                if ($product->stock_quantity < $transaction->quantity) {
-                    return response()->json(['message' => 'Stok tidak cukup untuk transaksi keluar.'], 400);
-                }
-
-                $product->updateStock($transaction->quantity, 'out');
+            
+            if ($product->transaction()->exists()) {
+                
+                $product->update($request->except('stock_quantity')); 
+            } else {
+                
+                $product->update($request->all());
             }
 
-            $product->save();
-
-            return response()->json(['message' => 'Data berhasil diupdate', 'data' => $transaction], 200);
+            return response()->json(['message' => 'Data produk berhasil diupdate', 'data' => $product], 200);
         } catch (\Throwable $e) {
             return response()->json(['message' => $e->getMessage()], 500);
         }

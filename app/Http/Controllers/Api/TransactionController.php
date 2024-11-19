@@ -45,18 +45,15 @@ class TransactionController extends Controller
 
             $product = Product::find($transaction->product_id);
             if ($transaction->transaction_type === 'in') {
-
-                $product->stock_quantity += $transaction->quantity;
+                $product->updateStock($transaction->quantity, 'in');
             } elseif ($transaction->transaction_type === 'out') {
-
                 if ($product->stock_quantity < $transaction->quantity) {
                     return response()->json(['message' => 'Stok tidak cukup untuk transaksi keluar.'], 400);
                 }
-                $product->stock_quantity -= $transaction->quantity;
+                $product->updateStock($transaction->quantity, 'out');
             }
-            $product->save(); 
 
-            return response()->json(['message' => 'Data berhasil disimpan', 'data' => $transaction], 200);
+            return response()->json(['message' => 'Data transaksi berhasil disimpan', 'data' => $transaction], 200);
         } catch (\Throwable $e) {
             return response()->json(['message' => $e->getMessage()], 500);
         }
@@ -115,29 +112,24 @@ class TransactionController extends Controller
 
             $product = Product::find($transaction->product_id);
 
-            if ($transaction->transaction_type === 'in') {
+            $quantityDifference = $transaction->quantity - $previousQuantity;
 
+            if ($transaction->transaction_type === 'in') {
                 if ($previousTransactionType === 'out') {
-                    $product->stock_quantity += $previousQuantity;
+                    $product->updateStock($previousQuantity, 'in');
                 }
-                
-                $product->stock_quantity += $transaction->quantity;
+                $product->updateStock($quantityDifference, 'in');
             } elseif ($transaction->transaction_type === 'out') {
-                
                 if ($previousTransactionType === 'in') {
-                    $product->stock_quantity -= $previousQuantity;
+                    $product->updateStock($previousQuantity, 'out');
                 }
-                
                 if ($product->stock_quantity < $transaction->quantity) {
                     return response()->json(['message' => 'Stok tidak cukup untuk transaksi keluar.'], 400);
                 }
-                
-                $product->stock_quantity -= $transaction->quantity;
+                $product->updateStock($quantityDifference, 'out');
             }
 
-            $product->save();
-
-            return response()->json(['message' => 'Data berhasil diupdate', 'data' => $transaction], 200);
+            return response()->json(['message' => 'Data transaksi berhasil diupdate', 'data' => $transaction], 200);
         } catch (\Throwable $e) {
             return response()->json(['message' => $e->getMessage()], 500);
         }
