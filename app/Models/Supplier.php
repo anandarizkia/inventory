@@ -52,7 +52,7 @@ class Supplier extends Model
     {
         $customAttributes = [
             'Supplier_Name' => 'Nama Supplier',
-            'Supplier_Contact' => 'Kontak Supplier',
+            'Supplier_Contact' => 'Kontak',
             'Address' => 'Alamat',
         ];
         $validator->addReplacer('required', function ($message, $attribute, $rule, $parameters) use ($customAttributes) {
